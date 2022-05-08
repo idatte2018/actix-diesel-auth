@@ -21,7 +21,7 @@ async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<Servi
     let config = req.app_data::<Config>().cloned().unwrap_or_default();
     match auth::validate_token(credentials.token()).await {
         Ok(res) => {
-            if res == true {
+            if res {
                 Ok(req)
             } else {
                 Err(AuthenticationError::from(config).into())
@@ -44,11 +44,11 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create pool.");
 
     // Start http server
-    HttpServer::new(|| {
+    HttpServer::new(move || {
         let auth = HttpAuthentication::bearer(validator);
         App::new()
             .wrap(auth)
-            .data(pool.clone())
+            .app_data(pool.clone())
             .route("/users", web::get().to(handlers::get_users))
             .route("/users/{id}", web::get().to(handlers::get_user_by_id))
             .route("/users", web::post().to(handlers::add_user))

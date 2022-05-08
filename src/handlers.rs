@@ -17,10 +17,8 @@ pub struct InputUser {
 
 // Handler for GET /users
 pub async fn get_users(db: web::Data<Pool>) -> Result<HttpResponse, Error> {
-    Ok(web::block(move || get_all_users(db))
-        .await
-        .map(|user| HttpResponse::Ok().json(user))
-        .map_err(|_| HttpResponse::InternalServerError())?)
+    let result = web::block(move || get_all_users(db)).await?;
+    Ok(HttpResponse::Ok().json(result.unwrap()))
 }
 
 // Handler for GET /users/{id}
@@ -28,12 +26,8 @@ pub async fn get_user_by_id(
     db: web::Data<Pool>,
     user_id: web::Path<i32>,
 ) -> Result<HttpResponse, Error> {
-    Ok(
-        web::block(move || db_get_user_by_id(db, user_id.into_inner()))
-            .await
-            .map(|user| HttpResponse::Ok().json(user))
-            .map_err(|_| HttpResponse::InternalServerError())?,
-    )
+    let result = web::block(move || db_get_user_by_id(db, user_id.into_inner())).await?;
+    Ok(HttpResponse::Ok().json(result.unwrap()))
 }
 
 // Handler for POST /users
@@ -41,10 +35,8 @@ pub async fn add_user(
     db: web::Data<Pool>,
     item: web::Json<InputUser>,
 ) -> Result<HttpResponse, Error> {
-    Ok(web::block(move || add_single_user(db, item))
-        .await
-        .map(|user| HttpResponse::Created().json(user))
-        .map_err(|_| HttpResponse::InternalServerError())?)
+    let result = web::block(move || add_single_user(db, item)).await?;
+    Ok(HttpResponse::Ok().json(result.unwrap()))
 }
 
 // Handler for DELETE /users/{id}
@@ -52,12 +44,8 @@ pub async fn delete_user(
     db: web::Data<Pool>,
     user_id: web::Path<i32>,
 ) -> Result<HttpResponse, Error> {
-    Ok(
-        web::block(move || delete_single_user(db, user_id.into_inner()))
-            .await
-            .map(|user| HttpResponse::Ok().json(user))
-            .map_err(|_| HttpResponse::InternalServerError())?,
-    )
+    let result = web::block(move || delete_single_user(db, user_id.into_inner())).await;
+    Ok(HttpResponse::Ok().json(result.unwrap().unwrap()))
 }
 
 fn db_get_user_by_id(pool: web::Data<Pool>, user_id: i32) -> Result<User, diesel::result::Error> {
