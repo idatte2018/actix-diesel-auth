@@ -18,11 +18,8 @@ use actix_web_httpauth::extractors::AuthenticationError;
 use actix_web_httpauth::middleware::HttpAuthentication;
 
 async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, Error> {
-    let config = req
-        .app_data::<Config>()
-        .map(|data| data.get_ref().clone())
-        .unwrap_or_else(Default::default);
-    match auth::validate_token(credentials.token()) {
+    let config = req.app_data::<Config>().cloned().unwrap_or_default();
+    match auth::validate_token(credentials.token()).await {
         Ok(res) => {
             if res == true {
                 Ok(req)
@@ -47,7 +44,7 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create pool.");
 
     // Start http server
-    HttpServer::new(move || {
+    HttpServer::new(|| {
         let auth = HttpAuthentication::bearer(validator);
         App::new()
             .wrap(auth)

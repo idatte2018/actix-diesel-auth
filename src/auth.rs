@@ -10,10 +10,15 @@ struct Claims {
     exp: usize,
 }
 
-pub fn validate_token(token: &str) -> Result<bool, ServiceError> {
+pub async fn validate_token(token: &str) -> Result<bool, ServiceError> {
     let authority = std::env::var("AUTHORITY").expect("AUTHORITY must be set");
-    let jwks = fetch_jwks(&format!("{}{}", authority.as_str(), ".well-known/jwks.json"))
-        .expect("failed to fetch jwks");
+    let jwks = fetch_jwks(&format!(
+        "{}{}",
+        authority.as_str(),
+        ".well-known/jwks.json"
+    ))
+    .await
+    .expect("failed to fetch jwks");
     let validations = vec![Validation::Issuer(authority), Validation::SubjectPresent];
     let kid = match token_kid(&token) {
         Ok(res) => res.expect("failed to decode kid"),
@@ -24,8 +29,8 @@ pub fn validate_token(token: &str) -> Result<bool, ServiceError> {
     Ok(res.is_ok())
 }
 
-fn fetch_jwks(uri: &str) -> Result<JWKS, Box<dyn Error>> {
-    let mut res = reqwest::get(uri)?;
-    let val = res.json::<JWKS>()?;
+async fn fetch_jwks(uri: &str) -> Result<JWKS, Box<dyn Error>> {
+    let res = reqwest::get(uri).await?;
+    let val = res.json::<JWKS>().await?;
     return Ok(val);
 }
