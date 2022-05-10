@@ -2,7 +2,7 @@
 name = "actix-auth"
 version = "0.1.1"
 authors = ["Abhishek Chanda <no@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 actix-web = "4.0.1"
